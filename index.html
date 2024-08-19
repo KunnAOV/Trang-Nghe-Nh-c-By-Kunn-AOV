@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Website</title>
+    <style>
+        #content {
+            display: none;
+            text-align: center;
+        }
+        #key-section {
+            text-align: center;
+            margin-top: 50px;
+        }
+        #player-controls {
+            margin-top: 20px;
+        }
+        #progress {
+            width: 100%;
+            height: 10px;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        #progress-bar {
+            height: 100%;
+            background-color: #4caf50;
+            width: 0%;
+        }
+    </style>
+</head>
+<body>
+    <div id="key-section">
+        <h2>Nhập Key Để Truy Cập</h2>
+        <input type="text" id="key-input" placeholder="Nhập key tại đây">
+        <button onclick="checkKey()">Check Key</button>
+    </div>
+
+    <div id="content">
+        <h1>Chào mừng đến với trang web game!</h1>
+        <audio id="audioPlayer" controls>
+            <source id="audioSource" src="music/song1.mp3" type="audio/mpeg">
+            Your browser does not support the audio element.
+        </audio>
+        <div id="player-controls">
+            <button onclick="toggleAudio()">Bật/Tắt Nhạc</button>
+            <button onclick="prevTrack()">Bài Trước</button>
+            <button onclick="nextTrack()">Chuyển Bài</button>
+            <button onclick="restartTrack()">Phát Lại</button>
+            <br>
+            <label for="volume">Âm Lượng:</label>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="1" onchange="setVolume(this.value)">
+            <p>Thời gian: <span id="currentTime">0:00</span> / <span id="duration">0:00</span></p>
+            <div id="progress" onclick="seek(event)">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const songs = ['music/song1.mp3', 'music/song2.mp3'];
+        let currentSongIndex = 0;
+
+        function checkKey() {
+            const keyInput = document.getElementById('key-input').value;
+            const validKey = '1'; // Thay đổi thành key bạn muốn
+
+            if (keyInput === validKey) {
+                document.getElementById('key-section').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                setupAudioPlayer();
+            } else {
+                alert('Key không hợp lệ!');
+            }
+        }
+
+        function setupAudioPlayer() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const currentTimeElement = document.getElementById('currentTime');
+            const durationElement = document.getElementById('duration');
+            const progress = document.getElementById('progress');
+            const progressBar = document.getElementById('progress-bar');
+
+            audioPlayer.addEventListener('timeupdate', () => {
+                if (!isNaN(audioPlayer.duration)) {
+                    const minutes = Math.floor(audioPlayer.currentTime / 60);
+                    const seconds = Math.floor(audioPlayer.currentTime % 60);
+                    currentTimeElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    progressBar.style.width = `${(audioPlayer.currentTime / audioPlayer.duration) * 100}%`;
+                }
+            });
+
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                if (!isNaN(audioPlayer.duration)) {
+                    const minutes = Math.floor(audioPlayer.duration / 60);
+                    const seconds = Math.floor(audioPlayer.duration % 60);
+                    durationElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                }
+            });
+
+            audioPlayer.addEventListener('ended', () => {
+                nextTrack();
+            });
+        }
+
+        function toggleAudio() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+            } else {
+                audioPlayer.pause();
+            }
+        }
+
+        function prevTrack() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            loadTrack();
+        }
+
+        function nextTrack() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadTrack();
+        }
+
+        function restartTrack() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.currentTime = 0;
+            audioPlayer.play();
+        }
+
+        function loadTrack() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            document.getElementById('audioSource').src = songs[currentSongIndex];
+            audioPlayer.load();
+            audioPlayer.play();
+        }
+
+        function setVolume(value) {
+            document.getElementById('audioPlayer').volume = value;
+        }
+
+        function seek(event) {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const progress = document.getElementById('progress');
+            const offsetX = event.offsetX;
+            const totalWidth = progress.offsetWidth;
+            const percentage = offsetX / totalWidth;
+            audioPlayer.currentTime = percentage * audioPlayer.duration;
+        }
+    </script>
+</body>
+</html>
